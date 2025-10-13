@@ -1,6 +1,5 @@
 import streamlit as st
 import pandas as pd
-import plotly.graph_objects as go
 from datetime import datetime, timedelta
 from database import Database
 from bot import BitkubBot
@@ -79,22 +78,10 @@ with tab1:
     
     if summary:
         df_summary = pd.DataFrame(summary)
+        df_summary['date'] = pd.to_datetime(df_summary['date'])
         
-        # Chart
-        fig = go.Figure()
-        fig.add_trace(go.Bar(
-            x=df_summary['date'],
-            y=df_summary['profit'],
-            name='กำไร/ขาดทุน',
-            marker_color=['green' if x > 0 else 'red' for x in df_summary['profit']]
-        ))
-        fig.update_layout(
-            title='กำไร/ขาดทุนรายวัน',
-            xaxis_title='วันที่',
-            yaxis_title='THB',
-            height=400
-        )
-        st.plotly_chart(fig, use_container_width=True)
+        # Bar Chart
+        st.bar_chart(df_summary.set_index('date')['profit'])
         
         # Table
         st.dataframe(df_summary, use_container_width=True)
@@ -117,22 +104,10 @@ with tab2:
     
     if prices:
         df_prices = pd.DataFrame(prices)
+        df_prices['timestamp'] = pd.to_datetime(df_prices['timestamp'])
         
-        fig = go.Figure()
-        fig.add_trace(go.Scatter(
-            x=df_prices['timestamp'],
-            y=df_prices['price'],
-            mode='lines+markers',
-            name='ราคา',
-            line=dict(color='blue', width=2)
-        ))
-        fig.update_layout(
-            title=f'กราฟราคา {symbol_select}',
-            xaxis_title='เวลา',
-            yaxis_title='ราคา (THB)',
-            height=400
-        )
-        st.plotly_chart(fig, use_container_width=True)
+        # Line Chart
+        st.line_chart(df_prices.set_index('timestamp')['price'])
         
         # Stats
         col1, col2, col3, col4 = st.columns(4)
@@ -140,6 +115,10 @@ with tab2:
         col2.metric("สูงสุด", f"{df_prices['price'].max():.2f}")
         col3.metric("ต่ำสุด", f"{df_prices['price'].min():.2f}")
         col4.metric("เฉลี่ย", f"{df_prices['price'].mean():.2f}")
+        
+        # Show data
+        with st.expander("📋 ดูข้อมูลราคาทั้งหมด"):
+            st.dataframe(df_prices, use_container_width=True)
     else:
         st.info("ยังไม่มีข้อมูลราคา กดปุ่ม 'บันทึกราคา' ที่ Sidebar")
 
@@ -161,15 +140,8 @@ with tab3:
         # Profit by symbol
         profit_by_symbol = df_trades.groupby('symbol')['profit'].sum().reset_index()
         
-        fig = go.Figure(data=[
-            go.Bar(
-                x=profit_by_symbol['symbol'],
-                y=profit_by_symbol['profit'],
-                marker_color=['green' if x > 0 else 'red' for x in profit_by_symbol['profit']]
-            )
-        ])
-        fig.update_layout(title='กำไร/ขาดทุนแยกตามเหรียญ', height=300)
-        st.plotly_chart(fig, use_container_width=True)
+        st.markdown("#### กำไร/ขาดทุนแยกตามเหรียญ")
+        st.bar_chart(profit_by_symbol.set_index('symbol')['profit'])
     else:
         st.info("ยังไม่มีรายการเทรดวันนี้")
 
@@ -180,7 +152,8 @@ with tab4:
     
     if daily_reports:
         df_reports = pd.DataFrame(daily_reports)
-        df_reports['month'] = pd.to_datetime(df_reports['date']).dt.to_period('M')
+        df_reports['date'] = pd.to_datetime(df_reports['date'])
+        df_reports['month'] = df_reports['date'].dt.to_period('M')
         
         monthly = df_reports.groupby('month').agg({
             'trades': 'sum',
@@ -191,17 +164,18 @@ with tab4:
         monthly['month'] = monthly['month'].astype(str)
         
         # Chart
-        fig = go.Figure()
-        fig.add_trace(go.Bar(
-            x=monthly['month'],
-            y=monthly['profit'],
-            name='กำไรรายเดือน',
-            marker_color=['green' if x > 0 else 'red' for x in monthly['profit']]
-        ))
-        fig.update_layout(title='กำไร/ขาดทุนรายเดือน', height=400)
-        st.plotly_chart(fig, use_container_width=True)
+        st.markdown("#### กำไร/ขาดทุนรายเดือน")
+        chart_data = monthly.set_index('month')['profit']
+        st.bar_chart(chart_data)
         
+        # Table
         st.dataframe(monthly, use_container_width=True)
+        
+        # Monthly Stats
+        col1, col2, col3 = st.columns(3)
+        col1.metric("💰 กำไรรวมทั้งหมด", f"{monthly['profit'].sum():.2f} THB")
+        col2.metric("📊 เทรดรวม", int(monthly['trades'].sum()))
+        col3.metric("✅ อัตราสำเร็จเฉลี่ย", f"{monthly['success_rate'].mean():.1f}%")
     else:
         st.info("ยังไม่มีข้อมูลรายเดือน")
 
