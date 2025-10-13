@@ -10,6 +10,7 @@ DB_HOST = os.getenv('DB_HOST', 'localhost')
 DB_USER = os.getenv('DB_USER', 'root')
 DB_PASSWORD = os.getenv('DB_PASSWORD', 'password')
 DB_NAME = os.getenv('DB_NAME', 'bot_trade')
+DB_PORT = 33306
 
 # Trading Settings
 SYMBOLS = ['THB_BTC', 'THB_ETH', 'THB_USDT']  # เหรียญที่ต้องการเทรด
