@@ -8,6 +8,7 @@ class Database:
             host=config.DB_HOST,
             user=config.DB_USER,
             password=config.DB_PASSWORD,
+            DB_PORT = 33306,
             database=config.DB_NAME
         )
         self.cursor = self.conn.cursor(dictionary=True)
