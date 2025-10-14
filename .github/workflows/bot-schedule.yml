@@ -2,8 +2,9 @@ name: Bot Trade Automation
 
 on:
   schedule:
-    # บันทึกราคาทุก 1 ชั่วโมง
-    - cron: '0 * * * *'
+    - cron: '0 1 * * *'     # 08:00 ไทย
+    - cron: '0 5 * * *'     # 12:00 ไทย
+    - cron: '30 9 * * *'    # 16:30 ไทย
     # Health check ทุก 5 นาที
     - cron: '*/5 * * * *'
     # รายงานและ backup ทุกวัน เวลา 23:55
